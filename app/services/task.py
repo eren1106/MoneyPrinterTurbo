@@ -10,7 +10,7 @@ from loguru import logger
 from app.config import config
 from app.models import const
 from app.models.schema import VideoConcatMode, VideoParams
-from app.services import llm, material, subtitle, video, voice
+from app.services import llm, material, subtitle, video, voice, youtube
 from app.services import state as sm
 from app.utils import utils
 
@@ -193,7 +193,7 @@ def save_video_export_data(task_id: str, video_path: str, params: VideoParams, v
 
 
 def generate_final_videos(
-    task_id, params, downloaded_videos, audio_file, subtitle_path
+    task_id, params, downloaded_videos, audio_file, subtitle_path, video_script=None, upload_to_youtube=True
 ):
     final_video_paths = []
     combined_video_paths = []
@@ -240,10 +240,23 @@ def generate_final_videos(
         final_video_paths.append(final_video_path)
         combined_video_paths.append(combined_video_path)
 
+    if upload_to_youtube and os.path.exists(final_video_path):
+        logger.info("\n\n## uploading video to YouTube")
+        video_id = youtube.upload_video(
+            video_file=final_video_path,
+            title=params.video_subject,
+            description=video_script,
+            privacy_status='private'  # Default to private for safety
+        )
+        if video_id:
+            logger.info(f"Video uploaded successfully to YouTube! Video ID: {video_id}")
+        else:
+            logger.error("Failed to upload video to YouTube")
+    
     return final_video_paths, combined_video_paths
 
 
-def start(task_id, params: VideoParams, stop_at: str = "video"):
+def start(task_id, params: VideoParams, stop_at: str = "video", upload_to_youtube: bool = True):
     logger.info(f"start task: {task_id}, stop_at: {stop_at}")
     sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=5)
 
@@ -338,7 +351,8 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
 
     # 6. Generate final videos
     final_video_paths, combined_video_paths = generate_final_videos(
-        task_id, params, downloaded_videos, audio_file, subtitle_path
+        task_id, params, downloaded_videos, audio_file, subtitle_path,
+        video_script=video_script, upload_to_youtube=upload_to_youtube
     )
 
     if not final_video_paths:

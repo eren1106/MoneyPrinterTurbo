@@ -26,3 +26,7 @@ node_modules
 
 venv/
 .venv
+
+# Youtube API credentials
+client_secret.json
+token.pickle
