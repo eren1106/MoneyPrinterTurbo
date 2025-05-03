@@ -1,6 +1,8 @@
 import math
 import os.path
 import re
+import csv
+from datetime import datetime
 from os import path
 
 from loguru import logger
@@ -154,6 +156,40 @@ def get_video_materials(task_id, params, video_terms, audio_duration):
             )
             return None
         return downloaded_videos
+
+
+def save_video_export_data(task_id: str, video_path: str, params: VideoParams, video_script: str):
+    """Save video export data to a CSV file in the storage directory."""
+    csv_path = path.join('storage', 'video_exports.csv')
+    file_exists = path.exists(csv_path)
+    
+    # Format tags properly
+    tags = ''
+    if params.video_terms:
+        if isinstance(params.video_terms, list):
+            tags = ', '.join(params.video_terms)
+        else:
+            tags = params.video_terms
+    
+    # Use video script as subtitle content
+    subtitle_content = video_script.strip() if video_script else ''
+    
+    data = {
+        'task_id': task_id,
+        'title': params.video_subject,
+        'tags': tags,
+        'subtitle': subtitle_content,
+        'video_path': video_path,
+        'export_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    
+    with open(csv_path, 'a', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=data.keys())
+        if not file_exists:
+            writer.writeheader()
+        writer.writerow(data)
+    
+    logger.info(f'Video export data saved to {csv_path}')
 
 
 def generate_final_videos(
@@ -312,6 +348,10 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
     logger.success(
         f"task {task_id} finished, generated {len(final_video_paths)} videos."
     )
+
+    # Save video export data for each generated video
+    for video_path in final_video_paths:
+        save_video_export_data(task_id, video_path, params, video_script)
 
     kwargs = {
         "videos": final_video_paths,
