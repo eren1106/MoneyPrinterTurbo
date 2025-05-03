@@ -901,7 +901,7 @@ with right_panel:
         with stroke_cols[0]:
             params.stroke_color = st.color_picker(tr("Stroke Color"), "#000000")
         with stroke_cols[1]:
-            params.stroke_width = st.slider(tr("Stroke Width"), 0.0, 10.0, 1.5)
+            params.stroke_width = st.slider(tr("Stroke Width"), 0.0, 10.0, 3.5)
 
 start_button = st.button(tr("Generate Video"), use_container_width=True, type="primary")
 if start_button:
