@@ -22,6 +22,7 @@ def get_youtube_service(client_secrets_file):
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(client_secrets_file, SCOPES)
+            # add http://localhost:8090/ in Authorized redirect URIs of https://console.cloud.google.com/auth/clients
             creds = flow.run_local_server(port=8090)
             logger.info(f"Authentication successful")
         
