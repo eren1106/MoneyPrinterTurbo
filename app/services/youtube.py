@@ -32,7 +32,7 @@ def get_youtube_service(client_secrets_file):
 
     return build('youtube', 'v3', credentials=creds)
 
-def upload_video(video_file, title, description, privacy_status='private', client_secrets_file='client_secret.json'):
+def upload_video(video_file, title, description, privacy_status='private', client_secrets_file='client_secret.json', tags=None):
     """
     Upload a video to YouTube.
     
@@ -42,6 +42,7 @@ def upload_video(video_file, title, description, privacy_status='private', clien
         description (str): Description of the video
         privacy_status (str): Privacy status ('private', 'unlisted', or 'public')
         client_secrets_file (str): Path to the client secrets file
+        tags (list): List of tags for the video (optional)
     
     Returns:
         str: YouTube video ID if successful, None if failed
@@ -53,7 +54,7 @@ def upload_video(video_file, title, description, privacy_status='private', clien
             'snippet': {
                 'title': title,
                 'description': description,
-                'tags': []
+                'tags': tags if tags else [],
             },
             'status': {
                 'privacyStatus': privacy_status,

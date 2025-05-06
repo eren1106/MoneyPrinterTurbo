@@ -191,7 +191,7 @@ def save_video_export_data(task_id: str, video_path: str, params: VideoParams, v
     
     logger.info(f'Video export data saved to {csv_path}')
 
-
+# TODO: add switch in UI to toggle upload to YouTube
 def generate_final_videos(
     task_id, params, downloaded_videos, audio_file, subtitle_path, video_script=None, upload_to_youtube=True
 ):
@@ -246,7 +246,8 @@ def generate_final_videos(
             video_file=final_video_path,
             title=params.video_subject,
             description=video_script,
-            privacy_status='private'  # Default to private for safety
+            privacy_status='public',
+            tags=["fyp", "productivity", "procrastination", "time management"]
         )
         if video_id:
             logger.info(f"Video uploaded successfully to YouTube! Video ID: {video_id}")
