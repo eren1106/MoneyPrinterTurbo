@@ -237,6 +237,16 @@ def generate_final_videos(
         _progress += 50 / params.video_count / 2
         sm.state.update_task(task_id, progress=_progress)
 
+        # Add hook video if enabled
+        if params.use_transitional_hook:
+            logger.info(f"\n\n## adding hook video to: {final_video_path}")
+            final_video_path = video.add_hook_video(
+                final_video_path=final_video_path,
+                video_aspect=params.video_aspect,
+                max_clip_duration=params.video_clip_duration,
+                threads=params.n_threads,
+            )
+
         final_video_paths.append(final_video_path)
         combined_video_paths.append(combined_video_path)
 

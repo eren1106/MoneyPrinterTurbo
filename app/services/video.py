@@ -408,6 +408,100 @@ def preprocess_video(materials: List[MaterialInfo], clip_duration=4):
     return materials
 
 
+def add_hook_video(final_video_path: str, video_aspect: VideoAspect = VideoAspect.portrait, max_clip_duration: int = 5, threads: int = 2) -> str:
+    """Generate a hook video and concatenate it with the final video.
+    
+    Args:
+        final_video_path: Path to the final video
+        video_paths: List of video paths to choose from for the hook
+        video_aspect: Video aspect ratio
+        max_clip_duration: Maximum duration of the hook clip
+        threads: Number of threads to use for video processing
+        
+    Returns:
+        str: Path to the new video with hook
+    """
+    # Get hook videos from storage/transitional_hooks directory
+    hooks_dir = os.path.join('storage', 'transitional_hooks')
+    if not os.path.exists(hooks_dir):
+        logger.warning(f"Transitional hooks directory not found: {hooks_dir}")
+        return final_video_path
+        
+    # Get all video files from hooks directory
+    hook_files = []
+    for ext in [".mp4", ".avi", ".mov", ".mkv"]:
+        hook_files.extend(glob.glob(os.path.join(hooks_dir, f"*{ext}")))
+        
+    if not hook_files:
+        logger.warning(f"No hook videos found in: {hooks_dir}")
+        return final_video_path
+        
+    # Choose a random hook video
+    hook_video_path = random.choice(hook_files)
+    hook_clip = VideoFileClip(hook_video_path)
+    # hook_clip = VideoFileClip(hook_video_path).without_audio()
+    
+    # Limit hook duration
+    if hook_clip.duration > max_clip_duration:
+        hook_clip = hook_clip.subclipped(0, max_clip_duration)
+    
+    # Resize hook video if needed
+    aspect = VideoAspect(video_aspect)
+    video_width, video_height = aspect.to_resolution()
+    
+    clip_w, clip_h = hook_clip.size
+    if clip_w != video_width or clip_h != video_height:
+        clip_ratio = hook_clip.w / hook_clip.h
+        video_ratio = video_width / video_height
+        
+        if clip_ratio == video_ratio:
+            hook_clip = hook_clip.resized((video_width, video_height))
+        else:
+            if clip_ratio > video_ratio:
+                scale_factor = video_width / clip_w
+            else:
+                scale_factor = video_height / clip_h
+            
+            new_width = int(clip_w * scale_factor)
+            new_height = int(clip_h * scale_factor)
+            clip_resized = hook_clip.resized(new_size=(new_width, new_height))
+            
+            background = ColorClip(size=(video_width, video_height), color=(0, 0, 0))
+            hook_clip = CompositeVideoClip([
+                background.with_duration(clip_resized.duration),
+                clip_resized.with_position("center"),
+            ])
+    
+    # Add fade out transition to hook
+    # hook_clip = video_effects.fadeout_transition(hook_clip, 1)
+    
+    # Load the final video
+    final_clip = VideoFileClip(final_video_path)
+    
+    # Add fade in transition to final video
+    final_clip = video_effects.fadein_transition(final_clip, 1)
+    
+    # Concatenate hook with final video
+    output_path = final_video_path.replace(".mp4", "-with-hook.mp4")
+    combined = concatenate_videoclips([hook_clip, final_clip])
+    
+    # Write the combined video
+    combined.write_videofile(
+        filename=output_path,
+        threads=threads,
+        logger=None,
+        temp_audiofile_path=os.path.dirname(output_path),
+        audio_codec="aac",
+        fps=30,
+    )
+    
+    # Clean up
+    hook_clip.close()
+    final_clip.close()
+    combined.close()
+    
+    return output_path
+
 if __name__ == "__main__":
     m = MaterialInfo()
     m.url = "/Users/harry/Downloads/IMG_2915.JPG"

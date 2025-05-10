@@ -625,6 +625,7 @@ with middle_panel:
     with st.container(border=True):
         st.write(tr("Video Settings"))
         params.upload_to_youtube = st.checkbox(tr("Upload to YouTube"), value=True)
+        params.use_transitional_hook = st.checkbox(tr("Add Random Transitional Hook"), value=True)
         video_concat_modes = [
             (tr("Sequential"), "sequential"),
             (tr("Random"), "random"),
