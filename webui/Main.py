@@ -624,6 +624,7 @@ with left_panel:
 with middle_panel:
     with st.container(border=True):
         st.write(tr("Video Settings"))
+        params.upload_to_youtube = st.checkbox(tr("Upload to YouTube"), value=True)
         video_concat_modes = [
             (tr("Sequential"), "sequential"),
             (tr("Random"), "random"),

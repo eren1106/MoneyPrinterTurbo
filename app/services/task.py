@@ -193,7 +193,7 @@ def save_video_export_data(task_id: str, video_path: str, params: VideoParams, v
 
 # TODO: add switch in UI to toggle upload to YouTube
 def generate_final_videos(
-    task_id, params, downloaded_videos, audio_file, subtitle_path, video_script=None, upload_to_youtube=True
+    task_id, params, downloaded_videos, audio_file, subtitle_path, video_script=None
 ):
     final_video_paths = []
     combined_video_paths = []
@@ -240,13 +240,15 @@ def generate_final_videos(
         final_video_paths.append(final_video_path)
         combined_video_paths.append(combined_video_path)
 
-    if upload_to_youtube and os.path.exists(final_video_path):
-        logger.info("\n\n## uploading video to YouTube")
+    # upload to youtube
+    if params.upload_to_youtube and os.path.exists(final_video_path):
+        logger.info("\n\n## uploading to youtube")
         video_id = youtube.upload_video(
             video_file=final_video_path,
             title=params.video_subject,
             description=video_script,
             privacy_status='public',
+            # TODO: add this a constant variable
             tags=["fyp", "productivity", "procrastination", "time management"]
         )
         if video_id:
@@ -257,7 +259,7 @@ def generate_final_videos(
     return final_video_paths, combined_video_paths
 
 
-def start(task_id, params: VideoParams, stop_at: str = "video", upload_to_youtube: bool = True):
+def start(task_id, params: VideoParams, stop_at: str = "video"):
     logger.info(f"start task: {task_id}, stop_at: {stop_at}")
     sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=5)
 
@@ -352,8 +354,7 @@ def start(task_id, params: VideoParams, stop_at: str = "video", upload_to_youtub
 
     # 6. Generate final videos
     final_video_paths, combined_video_paths = generate_final_videos(
-        task_id, params, downloaded_videos, audio_file, subtitle_path,
-        video_script=video_script, upload_to_youtube=upload_to_youtube
+        task_id, params, downloaded_videos, audio_file, subtitle_path, video_script=video_script
     )
 
     if not final_video_paths:

@@ -103,6 +103,7 @@ class VideoParams(BaseModel):
     stroke_width: float = 1.5
     n_threads: Optional[int] = 2
     paragraph_number: Optional[int] = 1
+    upload_to_youtube: Optional[bool] = True
 
 
 class SubtitleRequest(BaseModel):
