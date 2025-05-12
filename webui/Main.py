@@ -27,6 +27,7 @@ from app.services import llm, voice
 from app.services import task as tm
 from app.utils import utils
 
+# TODO: add new page for generating video only about ask people to quick social media
 st.set_page_config(
     page_title="MoneyPrinterTurbo",
     page_icon="🤖",

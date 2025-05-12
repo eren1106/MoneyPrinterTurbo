@@ -253,6 +253,7 @@ def generate_final_videos(
     # upload to youtube
     if params.upload_to_youtube and os.path.exists(final_video_path):
         logger.info("\n\n## uploading to youtube")
+        # Note: if faced token expired error, delete token.pickle and run again, it will trigger the oauth login
         video_id = youtube.upload_video(
             video_file=final_video_path,
             title=params.video_subject,
