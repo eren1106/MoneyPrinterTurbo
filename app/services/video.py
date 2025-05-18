@@ -293,7 +293,7 @@ def generate_video(
         _clip = _clip.with_end(subtitle_item[0][1])
         _clip = _clip.with_duration(duration)
         if params.subtitle_position == "bottom":
-            _clip = _clip.with_position(("center", video_height * 0.95 - _clip.h))
+            _clip = _clip.with_position(("center", video_height * 0.85 - _clip.h))
         elif params.subtitle_position == "top":
             _clip = _clip.with_position(("center", video_height * 0.05))
         elif params.subtitle_position == "custom":
@@ -408,7 +408,7 @@ def preprocess_video(materials: List[MaterialInfo], clip_duration=4):
     return materials
 
 
-def add_hook_video(final_video_path: str, video_aspect: VideoAspect = VideoAspect.portrait, max_clip_duration: int = 5, threads: int = 2) -> str:
+def add_hook_video(final_video_path: str, video_aspect: VideoAspect = VideoAspect.portrait, max_clip_duration: int = 10, threads: int = 2) -> str:
     """Generate a hook video and concatenate it with the final video.
     
     Args:
