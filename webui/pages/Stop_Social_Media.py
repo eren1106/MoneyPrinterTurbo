@@ -3,6 +3,7 @@ import streamlit as st
 import sys
 from uuid import uuid4
 from loguru import logger
+from app.services import llm
 
 # Add the root directory of the project to the system path to allow importing modules
 root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -11,12 +12,14 @@ if root_dir not in sys.path:
 
 from app.config import config
 from app.models.schema import VideoParams
-from app.services import task as tm
+from app.services import task
 from app.utils import utils
 
+subscribe_script = "Subscribe now, and I’ll keep appearing to help you break the endless scrolling habit."
+
 # Initialize session state variables if they don't exist
-if 'stop_social_caption' not in st.session_state:
-    st.session_state['stop_social_caption'] = "Stop scrolling endlessly! 🛑 Take control of your life and break free from social media addiction. Your time is precious - make it count! 🌟 #DigitalWellness #Mindfulness"
+if 'stop_scrolling_script' not in st.session_state:
+    st.session_state['stop_scrolling_script'] = "Hey—you’ve been scrolling for minutes, maybe even hours. What if you paused right now and used that time to learn something new, create, or move your body instead? Stop the endless feed: pick up a book, start a hobby, or go for a walk—make every moment count! " + subscribe_script
 
 st.title("Stop Social Media")
 
@@ -32,24 +35,29 @@ with st.container(border=True):
     caption_col, btn_col = st.columns([4, 1])
     with caption_col:
         caption = st.text_area(
-            "Caption",
-            value=st.session_state['stop_social_caption'],
-            help="Enter the caption for your video"
+            "Script",
+            value=st.session_state['stop_scrolling_script'],
+            help="Enter the script for your video"
         )
     with btn_col:
         if st.button("🔄 Regenerate", key="regenerate_caption"):
-            # Here you would typically call your caption generation logic
-            # For now, we'll just use a simple alternative
-            new_caption = "Break free from social media addiction! 🎯 Start living in the present moment and rediscover what truly matters. Your life is waiting! ✨ #DigitalDetox #Mindfulness"
-            st.session_state['stop_social_caption'] = new_caption
-            st.rerun()
+            with st.spinner("Generating new script..."):
+                new_caption = llm.generate_script(
+                    video_subject="stop scrolling social media addiction",
+                    paragraph_number=1
+                )
+                if "Error: " in new_caption:
+                    st.error(new_caption)
+                else:
+                    st.session_state['stop_scrolling_script'] = new_caption + " " + subscribe_script
+                    st.rerun()
 
     # Tags field
-    tags = st.text_input(
-        "Tags",
-        value="#StopSocialMedia #DigitalWellness #Mindfulness #DigitalDetox #Productivity",
-        help="Enter tags separated by spaces"
-    )
+    # tags = st.text_input(
+    #     "Tags",
+    #     value="#fyp #productivity #procrastination #time management #success #motivation #discipline #AI",
+    #     help="Enter tags separated by spaces"
+    # )
 
     # Checkboxes
     col1, col2 = st.columns(2)
@@ -88,7 +96,7 @@ with st.container(border=True):
         logger.info(utils.to_json(params))
 
         # Start video generation
-        result = tm.start(task_id=task_id, params=params)
+        result = task.start(task_id=task_id, params=params)
         if not result or "videos" not in result:
             st.error("Video Generation Failed")
             logger.error("Video Generation Failed")
