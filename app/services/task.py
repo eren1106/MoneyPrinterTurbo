@@ -243,8 +243,8 @@ def generate_final_videos(
             final_video_path = video.add_hook_video(
                 final_video_path=final_video_path,
                 video_aspect=params.video_aspect,
-                max_clip_duration=params.video_clip_duration,
                 threads=params.n_threads,
+                specific_hook=params.specific_hook,
             )
 
         final_video_paths.append(final_video_path)
@@ -260,7 +260,7 @@ def generate_final_videos(
             description=video_script,
             privacy_status='public',
             # TODO: add this a constant variable
-            tags=["fyp", "productivity", "procrastination", "time management"]
+            tags=["fyp", "productivity", "procrastination", "time management", "success", "motivation", "discipline", "AI"],
         )
         if video_id:
             logger.info(f"Video uploaded successfully to YouTube! Video ID: {video_id}")

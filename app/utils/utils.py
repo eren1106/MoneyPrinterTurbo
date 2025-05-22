@@ -227,3 +227,23 @@ def load_locales(i18n_dir):
 
 def parse_extension(filename):
     return os.path.splitext(filename)[1].strip().lower().replace(".", "")
+
+def get_all_hook_videos():
+    """Get all available hook videos from the storage/transitional_hooks directory.
+    
+    Returns:
+        list: List of hook video paths
+    """
+    import os
+    import glob
+    
+    hooks_dir = os.path.join('storage', 'transitional_hooks')
+    if not os.path.exists(hooks_dir):
+        return []
+        
+    # Get all video files from hooks directory
+    hook_files = []
+    for ext in [".mp4", ".avi", ".mov", ".mkv"]:
+        hook_files.extend(glob.glob(os.path.join(hooks_dir, f"*{ext}")))
+    
+    return hook_files

@@ -408,7 +408,7 @@ def preprocess_video(materials: List[MaterialInfo], clip_duration=4):
     return materials
 
 
-def add_hook_video(final_video_path: str, video_aspect: VideoAspect = VideoAspect.portrait, max_clip_duration: int = 10, threads: int = 2) -> str:
+def add_hook_video(final_video_path: str, video_aspect: VideoAspect = VideoAspect.portrait, max_clip_duration: int = 10, threads: int = 2, specific_hook: str = None) -> str:
     """Generate a hook video and concatenate it with the final video.
     
     Args:
@@ -436,8 +436,8 @@ def add_hook_video(final_video_path: str, video_aspect: VideoAspect = VideoAspec
         logger.warning(f"No hook videos found in: {hooks_dir}")
         return final_video_path
         
-    # Choose a random hook video
-    hook_video_path = random.choice(hook_files)
+    # Use specific hook if provided, otherwise choose random
+    hook_video_path = specific_hook if specific_hook and specific_hook in hook_files else random.choice(hook_files)
     hook_clip = VideoFileClip(hook_video_path)
     # hook_clip = VideoFileClip(hook_video_path).without_audio()
     
