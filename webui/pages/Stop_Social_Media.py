@@ -1,3 +1,7 @@
+from app.utils import utils
+from app.services import task
+from app.models.schema import VideoAspect, VideoConcatMode, VideoParams, VideoTransitionMode
+from app.config import config
 import os
 import streamlit as st
 import sys
@@ -6,14 +10,11 @@ from loguru import logger
 from app.services import llm
 
 # Add the root directory of the project to the system path to allow importing modules
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+root_dir = os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.realpath(__file__))))
 if root_dir not in sys.path:
     sys.path.append(root_dir)
 
-from app.config import config
-from app.models.schema import VideoParams
-from app.services import task
-from app.utils import utils
 
 subscribe_script = "Subscribe now, and I’ll keep appearing to help you break the endless scrolling habit."
 
@@ -34,7 +35,7 @@ with st.container(border=True):
     # Caption field with regenerate button
     caption_col, btn_col = st.columns([4, 1])
     with caption_col:
-        caption = st.text_area(
+        script = st.text_area(
             "Script",
             value=st.session_state['stop_scrolling_script'],
             help="Enter the script for your video"
@@ -49,7 +50,8 @@ with st.container(border=True):
                 if "Error: " in new_caption:
                     st.error(new_caption)
                 else:
-                    st.session_state['stop_scrolling_script'] = new_caption + " " + subscribe_script
+                    st.session_state['stop_scrolling_script'] = new_caption + \
+                        " " + subscribe_script
                     st.rerun()
 
     # Tags field
@@ -67,7 +69,8 @@ with st.container(border=True):
         upload_to_youtube = st.checkbox("Upload to YouTube", value=True)
 
     # Generate Video button
-    start_button = st.button("Generate Video", use_container_width=True, type="primary")
+    start_button = st.button(
+        "Generate Video", use_container_width=True, type="primary")
     if start_button:
         config.save_config()
         task_id = str(uuid4())
@@ -75,6 +78,28 @@ with st.container(border=True):
         # Initialize video parameters
         params = VideoParams()
         params.video_subject = video_title
+        params.video_script = script
+        params.video_language = "en"
+        params.video_terms = ""
+        params.video_concat_mode = VideoConcatMode.random
+        params.video_transition_mode = VideoTransitionMode.none
+        params.video_aspect = VideoAspect.portrait
+        params.video_clip_duration = 3
+        params.video_count = 1
+        params.voice_name = "en-US-AndrewNeural-Male"
+        params.voice_volume = 1.0
+        params.voice_rate = 1.0
+        params.bgm_type = "random"
+        params.bgm_volume = 0.2
+        params.subtitle_enabled = True
+        params.subtitle_position = "bottom"
+        params.font_name = "MicrosoftYaHeiBold.ttc"
+        params.text_fore_color = "#FFFFFF"
+        params.font_size = 60
+        params.stroke_color = "#000000"
+        params.stroke_width = 3.5
+        params.video_source = "pexels"
+        # params.hide_log = False
         params.use_transitional_hook = use_hook
         params.upload_to_youtube = upload_to_youtube
 
