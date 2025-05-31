@@ -28,7 +28,7 @@ with st.container(border=True):
     # Title field
     video_title = st.text_input(
         "Video Title",
-        value="Stop Wasting Time on Social Media",
+        value="Stop Scrolling Bro",
         help="Enter the title for your video"
     )
 
