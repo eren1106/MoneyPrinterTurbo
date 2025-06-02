@@ -6,14 +6,19 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from loguru import logger
 
+from app.utils import utils
+
 SCOPES = ['https://www.googleapis.com/auth/youtube.upload']
 
-def get_youtube_service(client_secrets_file):
+def get_youtube_service():
     """Get authenticated YouTube service."""
     creds = None
+    token_file = os.path.join(utils.root_dir(), 'token.pickle')
+    client_secrets_file = os.path.join(utils.root_dir(), 'client_secret.json')
+
     # The file token.pickle stores the user's access and refresh tokens
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
+    if os.path.exists(token_file):
+        with open(token_file, 'rb') as token:
             creds = pickle.load(token)
     
     # If there are no (valid) credentials available, let the user log in
@@ -21,18 +26,21 @@ def get_youtube_service(client_secrets_file):
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
+            if not os.path.exists(client_secrets_file):
+                logger.error("client_secret.json not found, please put it in the project root directory")
+                return None
             flow = InstalledAppFlow.from_client_secrets_file(client_secrets_file, SCOPES)
             # add http://localhost:8090/ in Authorized redirect URIs of https://console.cloud.google.com/auth/clients
             creds = flow.run_local_server(port=8090)
             logger.info(f"Authentication successful")
         
         # Save the credentials for the next run
-        with open('token.pickle', 'wb') as token:
+        with open(token_file, 'wb') as token:
             pickle.dump(creds, token)
 
     return build('youtube', 'v3', credentials=creds)
 
-def upload_video(video_file, title, description, privacy_status='private', client_secrets_file='client_secret.json', tags=None):
+def upload_video(video_file, title, description, privacy_status='private', tags=None):
     """
     Upload a video to YouTube.
     
@@ -41,14 +49,13 @@ def upload_video(video_file, title, description, privacy_status='private', clien
         title (str): Title of the video
         description (str): Description of the video
         privacy_status (str): Privacy status ('private', 'unlisted', or 'public')
-        client_secrets_file (str): Path to the client secrets file
         tags (list): List of tags for the video (optional)
     
     Returns:
         str: YouTube video ID if successful, None if failed
     """
     try:
-        youtube = get_youtube_service(client_secrets_file)
+        youtube = get_youtube_service()
         
         body = {
             'snippet': {

@@ -160,7 +160,7 @@ def get_video_materials(task_id, params, video_terms, audio_duration):
 
 def save_video_export_data(task_id: str, video_path: str, params: VideoParams, video_script: str):
     """Save video export data to a CSV file in the storage directory."""
-    csv_path = path.join('storage', 'video_exports.csv')
+    csv_path = utils.storage_dir('video_exports.csv')
     file_exists = path.exists(csv_path)
     
     # Format tags properly
@@ -183,6 +183,7 @@ def save_video_export_data(task_id: str, video_path: str, params: VideoParams, v
         'export_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
     
+    # Write data to CSV file
     with open(csv_path, 'a', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=data.keys())
         if not file_exists:

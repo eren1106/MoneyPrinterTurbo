@@ -422,7 +422,7 @@ def add_hook_video(final_video_path: str, video_aspect: VideoAspect = VideoAspec
         str: Path to the new video with hook
     """
     # Get hook videos from storage/transitional_hooks directory
-    hooks_dir = os.path.join('storage', 'transitional_hooks')
+    hooks_dir = utils.storage_dir("transitional_hooks")
     if not os.path.exists(hooks_dir):
         logger.warning(f"Transitional hooks directory not found: {hooks_dir}")
         return final_video_path

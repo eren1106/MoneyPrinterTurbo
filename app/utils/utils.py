@@ -237,7 +237,8 @@ def get_all_hook_videos():
     import os
     import glob
     
-    hooks_dir = os.path.join('storage', 'transitional_hooks')
+    # hooks_dir = os.path.join('storage', 'transitional_hooks')
+    hooks_dir = storage_dir("transitional_hooks")
     if not os.path.exists(hooks_dir):
         return []
         
