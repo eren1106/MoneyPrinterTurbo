@@ -44,11 +44,13 @@ def generate_terms(task_id, params, video_script):
         )
     else:
         if isinstance(video_terms, str):
-            video_terms = [term.strip() for term in re.split(r"[,，]", video_terms)]
+            video_terms = [term.strip()
+                           for term in re.split(r"[,，]", video_terms)]
         elif isinstance(video_terms, list):
             video_terms = [term.strip() for term in video_terms]
         else:
-            raise ValueError("video_terms must be a string or a list of strings.")
+            raise ValueError(
+                "video_terms must be a string or a list of strings.")
 
         logger.debug(f"video terms: {utils.to_json(video_terms)}")
 
@@ -100,7 +102,8 @@ def generate_subtitle(task_id, params, video_script, sub_maker, audio_file):
         return ""
 
     subtitle_path = path.join(utils.task_dir(task_id), "subtitle.srt")
-    subtitle_provider = config.app.get("subtitle_provider", "edge").strip().lower()
+    subtitle_provider = config.app.get(
+        "subtitle_provider", "edge").strip().lower()
     logger.info(f"\n\n## generating subtitle, provider: {subtitle_provider}")
 
     subtitle_fallback = False
@@ -115,7 +118,8 @@ def generate_subtitle(task_id, params, video_script, sub_maker, audio_file):
     if subtitle_provider == "whisper" or subtitle_fallback:
         subtitle.create(audio_file=audio_file, subtitle_file=subtitle_path)
         logger.info("\n\n## correcting subtitle")
-        subtitle.correct(subtitle_file=subtitle_path, video_script=video_script)
+        subtitle.correct(subtitle_file=subtitle_path,
+                         video_script=video_script)
 
     subtitle_lines = subtitle.file_to_subtitles(subtitle_path)
     if not subtitle_lines:
@@ -162,7 +166,7 @@ def save_video_export_data(task_id: str, video_path: str, params: VideoParams, v
     """Save video export data to a CSV file in the storage directory."""
     csv_path = utils.storage_dir('video_exports.csv')
     file_exists = path.exists(csv_path)
-    
+
     # Format tags properly
     tags = ''
     if params.video_terms:
@@ -170,10 +174,10 @@ def save_video_export_data(task_id: str, video_path: str, params: VideoParams, v
             tags = ', '.join(params.video_terms)
         else:
             tags = params.video_terms
-    
+
     # Use video script as subtitle content
     subtitle_content = video_script.strip() if video_script else ''
-    
+
     data = {
         'task_id': task_id,
         'title': params.video_subject,
@@ -182,22 +186,22 @@ def save_video_export_data(task_id: str, video_path: str, params: VideoParams, v
         'video_path': video_path,
         'export_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
-    
+
     # Write data to CSV file
     with open(csv_path, 'a', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=data.keys())
         if not file_exists:
             writer.writeheader()
         writer.writerow(data)
-    
+
     logger.info(f'Video export data saved to {csv_path}')
 
-# TODO: add switch in UI to toggle upload to YouTube
+
 def generate_final_videos(
     task_id, params, downloaded_videos, audio_file, subtitle_path, video_script=None
 ):
     final_video_paths = []
-    combined_video_paths = []
+    # combined_video_paths = []
     video_concat_mode = (
         params.video_concat_mode if params.video_count == 1 else VideoConcatMode.random
     )
@@ -209,7 +213,8 @@ def generate_final_videos(
         combined_video_path = path.join(
             utils.task_dir(task_id), f"combined-{index}.mp4"
         )
-        logger.info(f"\n\n## combining video: {index} => {combined_video_path}")
+        logger.info(
+            f"\n\n## combining video: {index} => {combined_video_path}")
         video.combine_videos(
             combined_video_path=combined_video_path,
             video_paths=downloaded_videos,
@@ -224,7 +229,9 @@ def generate_final_videos(
         _progress += 50 / params.video_count / 2
         sm.state.update_task(task_id, progress=_progress)
 
-        final_video_path = path.join(utils.task_dir(task_id), f"final-{index}.mp4")
+        # final_video_path = path.join(utils.task_dir(task_id), f"final-{index}.mp4")
+        final_video_path = path.join(
+            utils.final_videos_dir(), f"{task_id}-{index}.mp4")
 
         logger.info(f"\n\n## generating video: {index} => {final_video_path}")
         video.generate_video(
@@ -249,7 +256,7 @@ def generate_final_videos(
             )
 
         final_video_paths.append(final_video_path)
-        combined_video_paths.append(combined_video_path)
+        # combined_video_paths.append(combined_video_path)
 
     # upload to youtube
     if params.upload_to_youtube and os.path.exists(final_video_path):
@@ -261,19 +268,28 @@ def generate_final_videos(
             description=video_script,
             privacy_status='public',
             # TODO: add this a constant variable
-            tags=["fyp", "productivity", "procrastination", "time management", "success", "motivation", "discipline", "AI"],
+            tags=["fyp", "productivity", "procrastination",
+                  "time management", "success", "motivation", "discipline", "AI"],
         )
         if video_id:
-            logger.info(f"Video uploaded successfully to YouTube! Video ID: {video_id}")
+            logger.info(
+                f"Video uploaded successfully to YouTube! Video ID: {video_id}")
         else:
             logger.error("Failed to upload video to YouTube")
-    
-    return final_video_paths, combined_video_paths
+
+    # clean up task dir and delete the folder
+    for file in os.listdir(utils.task_dir(task_id)):
+        os.remove(path.join(utils.task_dir(task_id), file))
+    os.rmdir(utils.task_dir(task_id))
+
+    # return final_video_paths, combined_video_paths
+    return final_video_paths
 
 
 def start(task_id, params: VideoParams, stop_at: str = "video"):
     logger.info(f"start task: {task_id}, stop_at: {stop_at}")
-    sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=5)
+    sm.state.update_task(
+        task_id, state=const.TASK_STATE_PROCESSING, progress=5)
 
     if type(params.video_concat_mode) is str:
         params.video_concat_mode = VideoConcatMode(params.video_concat_mode)
@@ -284,7 +300,8 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
         sm.state.update_task(task_id, state=const.TASK_STATE_FAILED)
         return
 
-    sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=10)
+    sm.state.update_task(
+        task_id, state=const.TASK_STATE_PROCESSING, progress=10)
 
     if stop_at == "script":
         sm.state.update_task(
@@ -308,7 +325,8 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
         )
         return {"script": video_script, "terms": video_terms}
 
-    sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=20)
+    sm.state.update_task(
+        task_id, state=const.TASK_STATE_PROCESSING, progress=20)
 
     # 3. Generate audio
     audio_file, audio_duration, sub_maker = generate_audio(
@@ -318,7 +336,8 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
         sm.state.update_task(task_id, state=const.TASK_STATE_FAILED)
         return
 
-    sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=30)
+    sm.state.update_task(
+        task_id, state=const.TASK_STATE_PROCESSING, progress=30)
 
     if stop_at == "audio":
         sm.state.update_task(
@@ -343,7 +362,8 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
         )
         return {"subtitle_path": subtitle_path}
 
-    sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=40)
+    sm.state.update_task(
+        task_id, state=const.TASK_STATE_PROCESSING, progress=40)
 
     # 5. Get video materials
     downloaded_videos = get_video_materials(
@@ -362,10 +382,12 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
         )
         return {"materials": downloaded_videos}
 
-    sm.state.update_task(task_id, state=const.TASK_STATE_PROCESSING, progress=50)
+    sm.state.update_task(
+        task_id, state=const.TASK_STATE_PROCESSING, progress=50)
 
     # 6. Generate final videos
-    final_video_paths, combined_video_paths = generate_final_videos(
+    final_video_paths = generate_final_videos(
+        # final_video_paths, combined_video_paths = generate_final_videos(
         task_id, params, downloaded_videos, audio_file, subtitle_path, video_script=video_script
     )
 
@@ -383,7 +405,7 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
 
     kwargs = {
         "videos": final_video_paths,
-        "combined_videos": combined_video_paths,
+        # "combined_videos": combined_video_paths,
         "script": video_script,
         "terms": video_terms,
         "audio_file": audio_file,

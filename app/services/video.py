@@ -495,6 +495,8 @@ def add_hook_video(final_video_path: str, video_aspect: VideoAspect = VideoAspec
         fps=30,
     )
     
+    # Delete original final video
+    os.remove(final_video_path)
     # Clean up
     hook_clip.close()
     final_clip.close()
