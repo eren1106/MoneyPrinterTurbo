@@ -197,11 +197,73 @@ def save_video_export_data(task_id: str, video_path: str, params: VideoParams, v
     logger.info(f'Video export data saved to {csv_path}')
 
 
+def safe_cleanup_task_dir(task_id, max_retries=5):
+    """Safely cleanup task directory with proper resource management"""
+    import time
+    import gc
+    import shutil
+
+    # Force garbage collection to release any MoviePy objects
+    gc.collect()
+
+    # Wait for file handles to be released
+    time.sleep(2)
+
+    task_dir = utils.task_dir(task_id)
+
+    for attempt in range(max_retries):
+        try:
+            if os.path.exists(task_dir):
+                # Use shutil.rmtree which is more robust than manual deletion
+                shutil.rmtree(task_dir)
+                logger.info(
+                    f"Successfully cleaned up task directory: {task_dir}")
+                return True
+        except PermissionError as e:
+            if attempt < max_retries - 1:
+                wait_time = 2 ** attempt  # Exponential backoff: 2, 4, 8, 16 seconds
+                logger.warning(
+                    f"Directory cleanup failed, retrying in {wait_time} seconds... (attempt {attempt + 1})")
+                time.sleep(wait_time)
+                gc.collect()  # Try garbage collection again
+            else:
+                logger.error(
+                    f"Failed to cleanup directory after {max_retries} attempts: {e}")
+                # Try to at least clean what we can
+                try:
+                    for file in os.listdir(task_dir):
+                        file_path = path.join(task_dir, file)
+                        try:
+                            os.remove(file_path)
+                            logger.info(f"Removed: {file_path}")
+                        except PermissionError:
+                            logger.warning(
+                                f"Could not remove (file in use): {file_path}")
+                        except Exception as ex:
+                            logger.warning(
+                                f"Could not remove: {file_path}, error: {ex}")
+
+                    # Try to remove empty directory
+                    try:
+                        os.rmdir(task_dir)
+                    except OSError:
+                        logger.warning(
+                            f"Directory not empty or locked: {task_dir}")
+
+                except Exception as cleanup_ex:
+                    logger.error(f"Partial cleanup failed: {cleanup_ex}")
+                return False
+        except Exception as e:
+            logger.error(f"Unexpected error during cleanup: {e}")
+            return False
+
+    return False
+
+
 def generate_final_videos(
     task_id, params, downloaded_videos, audio_file, subtitle_path, video_script=None
 ):
     final_video_paths = []
-    # combined_video_paths = []
     video_concat_mode = (
         params.video_concat_mode if params.video_count == 1 else VideoConcatMode.random
     )
@@ -229,7 +291,6 @@ def generate_final_videos(
         _progress += 50 / params.video_count / 2
         sm.state.update_task(task_id, progress=_progress)
 
-        # final_video_path = path.join(utils.task_dir(task_id), f"final-{index}.mp4")
         final_video_path = path.join(
             utils.final_videos_dir(), f"{task_id}-{index}.mp4")
 
@@ -256,18 +317,15 @@ def generate_final_videos(
             )
 
         final_video_paths.append(final_video_path)
-        # combined_video_paths.append(combined_video_path)
 
     # upload to youtube
     if params.upload_to_youtube and os.path.exists(final_video_path):
         logger.info("\n\n## uploading to youtube")
-        # Note: if faced token expired error, delete token.pickle and run again, it will trigger the oauth login
         video_id = youtube.upload_video(
             video_file=final_video_path,
             title=params.video_subject,
             description=video_script,
             privacy_status='public',
-            # TODO: add this a constant variable
             tags=["fyp", "productivity", "procrastination",
                   "time management", "success", "motivation", "discipline", "AI"],
         )
@@ -277,12 +335,9 @@ def generate_final_videos(
         else:
             logger.error("Failed to upload video to YouTube")
 
-    # clean up task dir and delete the folder
-    for file in os.listdir(utils.task_dir(task_id)):
-        os.remove(path.join(utils.task_dir(task_id), file))
-    os.rmdir(utils.task_dir(task_id))
+    # Safe cleanup with retry logic
+    safe_cleanup_task_dir(task_id)
 
-    # return final_video_paths, combined_video_paths
     return final_video_paths
 
 
@@ -408,9 +463,9 @@ def start(task_id, params: VideoParams, stop_at: str = "video"):
         # "combined_videos": combined_video_paths,
         "script": video_script,
         "terms": video_terms,
-        "audio_file": audio_file,
+        # "audio_file": audio_file,
         "audio_duration": audio_duration,
-        "subtitle_path": subtitle_path,
+        # "subtitle_path": subtitle_path,
         "materials": downloaded_videos,
     }
     sm.state.update_task(
