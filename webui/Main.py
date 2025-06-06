@@ -27,10 +27,9 @@ from app.services import llm, voice
 from app.services import task as tm
 from app.utils import utils
 
-# TODO: add new page for generating video only about ask people to quick social media
 st.set_page_config(
-    page_title="MoneyPrinterTurbo",
-    page_icon="🤖",
+    page_title="GuinPen - AI Video Generator",
+    page_icon="🐧",
     layout="wide",
     initial_sidebar_state="auto",
     menu_items={
@@ -61,7 +60,7 @@ locales = utils.load_locales(i18n_dir)
 title_col, lang_col = st.columns([3, 1])
 
 with title_col:
-    st.title(f"MoneyPrinterTurbo v{config.project_version}")
+    st.title(f"GuinPen - AI Video Generator")
 
 with lang_col:
     display_languages = []
@@ -239,7 +238,7 @@ if not config.app.get("hide_config", False):
     # 从 session_state 获取认证状态
     auth_status = st.session_state.get("authentication_status")
 
-st.write(tr("Get Help"))
+# st.write(tr("Get Help"))
 
 llm_provider = config.app.get("llm_provider", "").lower()
 
