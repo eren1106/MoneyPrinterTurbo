@@ -62,26 +62,6 @@ title_col, lang_col = st.columns([3, 1])
 with title_col:
     st.title(f"GuinPen - AI Video Generator")
 
-with lang_col:
-    display_languages = []
-    selected_index = 0
-    for i, code in enumerate(locales.keys()):
-        display_languages.append(f"{code} - {locales[code].get('Language')}")
-        if code == st.session_state.get("ui_language", ""):
-            selected_index = i
-
-    selected_language = st.selectbox(
-        "Language / 语言",
-        options=display_languages,
-        index=selected_index,
-        key="top_language_selector",
-        label_visibility="collapsed",
-    )
-    if selected_language:
-        code = selected_language.split(" - ")[0].strip()
-        st.session_state["ui_language"] = code
-        config.ui["language"] = code
-
 support_locales = [
     "zh-CN",
     "zh-HK",
@@ -194,49 +174,6 @@ locales = utils.load_locales(i18n_dir)
 def tr(key):
     loc = locales.get(st.session_state["ui_language"], {})
     return loc.get("Translation", {}).get(key, key)
-
-
-# 加载用户认证配置
-# 确保用户配置存在并包含所有必需的字段
-if "user" not in config._cfg:
-    config._cfg["user"] = {
-        "username": "admin",
-        "password": "admin",
-        "email": "admin@example.com",
-    }
-    config.save_config()
-elif "email" not in config._cfg["user"]:
-    # 如果用户配置存在但没有email字段，添加默认email
-    config._cfg["user"]["email"] = f"{config._cfg['user']['username']}@example.com"
-    config.save_config()
-
-# 创建认证对象
-authenticator = None
-auth_status = False
-
-# 检查是否需要身份验证才能访问配置
-if not config.app.get("hide_config", False):
-    # 创建认证配置
-    credentials = {
-        "usernames": {
-            config._cfg["user"]["username"]: {
-                "name": config._cfg["user"]["username"],
-                "password": config._cfg["user"]["password"],
-                "email": config._cfg["user"]["email"],
-            }
-        }
-    }
-
-    cookie_name = "mpt_auth_cookie"
-    cookie_key = "mpt_auth_key_123"
-    cookie_expiry_days = 30
-
-    authenticator = stauth.Authenticate(
-        credentials, cookie_name, cookie_key, cookie_expiry_days
-    )
-
-    # 从 session_state 获取认证状态
-    auth_status = st.session_state.get("authentication_status")
 
 # st.write(tr("Get Help"))
 
