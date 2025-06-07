@@ -103,8 +103,8 @@ class VideoParams(BaseModel):
     stroke_width: float = 1.5
     n_threads: Optional[int] = 2
     paragraph_number: Optional[int] = 1
-    upload_to_youtube: Optional[bool] = True
-    use_transitional_hook: bool = True
+    upload_to_youtube: Optional[bool] = False
+    use_transitional_hook: bool = False
     specific_hook: Optional[str] = None
 
 

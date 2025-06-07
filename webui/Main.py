@@ -462,11 +462,7 @@ if not config.app.get("hide_config", False):
             # Pexels API Key
             pexels_api_key = get_keys_from_config("pexels_api_keys")
             st.markdown(
-                f"**Pexels API Key** ([{tr('点击获取')}](https://www.pexels.com/api/documentation/))"
-            )
-            st.markdown(
-                f"<span style='color:#FF4B4B'>{tr('推荐使用')}</span>",
-                unsafe_allow_html=True,
+                f"**Pexels API Key** ([{'Click to get'}](https://www.pexels.com/api/documentation/))"
             )
             pexels_api_key = st.text_input(
                 "Pexels API Key",
@@ -476,23 +472,6 @@ if not config.app.get("hide_config", False):
                 label_visibility="collapsed",
             )
             save_keys_to_config("pexels_api_keys", pexels_api_key)
-            # Pixabay API Key
-            pixabay_api_key = get_keys_from_config("pixabay_api_keys")
-            st.markdown(
-                f"**Pixabay API Key** ([{tr('点击获取')}](https://pixabay.com/api/docs/))"
-            )
-            st.markdown(
-                f"<span style='color:#808080'>{tr('可以不用配置，如果 Pexels 无法使用，再选择Pixabay')}</span>",
-                unsafe_allow_html=True,
-            )
-            pixabay_api_key = st.text_input(
-                "Pixabay API Key",
-                value=pixabay_api_key,
-                type="password",
-                key="pixabay_api_key_input",
-                label_visibility="collapsed",
-            )
-            save_keys_to_config("pixabay_api_keys", pixabay_api_key)
 
 
 panel = st.columns(3)
@@ -567,8 +546,8 @@ with left_panel:
 with middle_panel:
     with st.container(border=True):
         st.write(tr("Video Settings"))
-        params.upload_to_youtube = st.checkbox(tr("Upload to YouTube"), value=True)
-        params.use_transitional_hook = st.checkbox(tr("Add Transitional Hook"), value=True)
+        params.upload_to_youtube = st.checkbox(tr("Upload to YouTube"), value=False)
+        params.use_transitional_hook = st.checkbox(tr("Add Transitional Hook"), value=False)
         if params.use_transitional_hook:
             # Get available hook videos
             hook_files = utils.get_all_hook_videos()
